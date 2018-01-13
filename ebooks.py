@@ -13,7 +13,7 @@ mastodon = Mastodon(
     client_id=os.environ['client_id'],
     client_secret=os.environ['client_secret'],
     access_token=os.environ['access_token'],
-    api_base_url='https://botsin.space'
+    api_base_url=os.environ['instance']
 )
 parse.uses_netloc.append("postgres")
 url = parse.urlparse(os.environ["DATABASE_URL"])

@@ -33,6 +33,8 @@ You'll need a few things to set this up, most notably you'll need to be comforta
 `heroku config:set client_id=CLIENT_ID_FROM_MASTODON_SETTINGS`
 `heroku config:set client_secret=CLIENT_SECRET_FROM_MASTODON_SETTINGS`
 `heroku config:set access_token=ACCESS_TOKEN_FROM_MASTODON_SETTINGS`
+You also need to add the base url of the instance you'll be using. Make sure the url is https!
+`heroku config:set instance=https://YOURINSTANCEURL.HERE`
 
 9. Provision the Heroku worker that's going to take care of most of the bot's tasks
 `heroku ps:scale worker=1`
