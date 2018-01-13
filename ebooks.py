@@ -42,7 +42,7 @@ else:
     userid = cur.fetchone()
     userid = userid[0]
     q.enqueue(update_toots, userid, timeout=900)
-    if random.randint(1, 1) == 1:
+    if random.randint(1, 4) == 1:
         q.enqueue(markov_toot, timeout=900)
         print("generating toot")
     else:
