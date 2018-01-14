@@ -26,7 +26,8 @@ dbconn = psycopg2.connect(
 )
 cur = dbconn.cursor()
 
-#this is a check to see if it's the first timne a user's run the bot, so the script knows to do db setup
+
+# this is a check to see if it's the first time a user's run the bot, so the script knows to do db setup
 try:
     cur.execute("select value from config_data where id=%s", ("setup",))
 except psycopg2.ProgrammingError:

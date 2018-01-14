@@ -26,13 +26,21 @@ dbconn = psycopg2.connect(
 )
 cur = dbconn.cursor()
 
-# regex to take out html tags
+
+# regex to take out html tags, urls and mentions
 def remove_tags(text):
     TAG_RE = re.compile(r'<[^>]+>')
-    return TAG_RE.sub('', text)
+    next_re = TAG_RE.sub('', text)
+    last = re.sub(r"(?:\@|https?\://)\S+", "", next_re)
+    if len(last) > 0:
+        if last[0] == " ":
+            last = last[1:]
+    else:
+        last = ""
+    return last
 
 
-#runs only if it's the first time a user has tried to run the bot
+# runs only if it's the first time a user has tried to run the bot
 def first_time_setup():
     who_am_i = mastodon.account_verify_credentials()
     who_i_follow = mastodon.account_following(who_am_i['id'])
@@ -63,15 +71,16 @@ def first_time_setup():
     print("setup complete")
     mastodon.toot("hello world")
 
+
 # keep your toots clean and free of html tags
 def toot_cleaner(toot):
-    if toot['spoiler_text'] == '':
+    if toot['spoiler_text'] == '' and toot['reblog'] is None and toot['visibility'] == 'public':
         return remove_tags(toot['content'])
     else:
         return ""
 
 
-#function that checks a user's timeline for new toots and saves them to the database
+# function that checks a user's timeline for new toots and saves them to the database
 def update_toots(userid):
     cur.execute("select value from config_data where id=%s", ("previous_page",))
     previous_page = cur.fetchone()
@@ -114,3 +123,30 @@ def markov_toot():
     toot_to_send = text_model.make_sentence()
     print("tooting the following: " + toot_to_send)
     mastodon.toot(html.unescape(toot_to_send))
+
+
+def regenerate_corpus():
+    cur.execute("truncate table toots")
+    dbconn.commit()
+    cur.execute("select value from config_data where id=%s", ("userid",))
+    userid = cur.fetchone()
+    userid = userid[0]
+    toots_to_add = []
+    first_toots = mastodon.account_statuses(userid)
+    previous_request = first_toots[0]['_pagination_prev']['since_id']
+    for toot in first_toots:
+        clean_toot = toot_cleaner(toot)
+        if clean_toot != "":
+            toots_to_add.append(clean_toot)
+    new_toots = mastodon.fetch_next(first_toots)
+    while new_toots is not None:
+        for toot in new_toots:
+            clean_toot = toot_cleaner(toot)
+            if clean_toot != "":
+                toots_to_add.append(clean_toot)
+        new_toots = mastodon.fetch_next(new_toots)
+    for toot_text in toots_to_add:
+        cur.execute("insert into toots (text,timestamp) values (%s,%s)", (toot_text, datetime.now()))
+    cur.execute("update config_data set value = %s where id = %s", (previous_request, "previous_page"))
+    dbconn.commit()
+    print("corpus regenerated")

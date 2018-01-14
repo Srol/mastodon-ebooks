@@ -51,4 +51,17 @@ Set the frequency to hourly. This doesn't mean it will toot every hour, just tha
 
 12. That's it!
 
+## Updating corpus
+
+If you set up the book on an older version, your corpus might have picked up mentions, boosts and private posts, as well as cluttered entities like urls. The new version is updated to not do that, so if you're updating, here's how you get a fresh start.
+
+1. Pull the newest version from Github.
+`git pull`
+
+2. Push the update to Heroku:
+`git push heroku master`
+
+3. run the corpus regeneration script. This will discord all the toots the bot has currently saved and re-save them following the new rules.
+`heroku run python regenerate.py`
+
 You can find me on Mastodon [@srol@mellified.men](http://mellified.men/@srol)
